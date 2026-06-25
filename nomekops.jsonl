@@ -1,15 +1,15 @@
-{"name" : "Arbok", "damage": 95}
-{"name" : "Rattata", "damage": 56}
-{"name" : "Venusaur", "damage": 100}
-{"name" : "Caterpie", "damage": 30}
-{"name" : "Ivysaur", "damage": 62}
-{"name" : "Nidoqueen", "damage": 90}
-{"name" : "Alakazam", "damage": 90}
-{"name" : "Metapod", "damage": 20}
-{"name" : "Pidgey", "damage": 45}
-{"name" : "Pidgeot", "damage": 166}
-{"name" : "Fearow", "damage": 80}
-{"name" : "Butterfree", "damage": 70}
-{"name" : "Bulbasaur", "damage": 50}
-{"name" : "Pikachu", "damage": 55}
-{"name" : "Banette", "damage": 115}
+{"name": "Arbok", "damage": 95, "type": "Poison"}
+{"name": "Rattata", "damage": 56, "type": "Normal"}
+{"name": "Venusaur", "damage": 100, "type": "Grass/Poison"}
+{"name": "Caterpie", "damage": 30, "type": "Bug"}
+{"name": "Ivysaur", "damage": 62, "type": "Grass/Poison"}
+{"name": "Nidoqueen", "damage": 90, "type": "Poison/Ground"}
+{"name": "Alakazam", "damage": 90, "type": "Psychic"}
+{"name": "Metapod", "damage": 20, "type": "Bug"}
+{"name": "Pidgey", "damage": 45, "type": "Normal/Flying"}
+{"name": "Pidgeot", "damage": 166, "type": "Normal/Flying"}
+{"name": "Fearow", "damage": 80, "type": "Normal/Flying"}
+{"name": "Butterfree", "damage": 70, "type": "Bug/Flying"}
+{"name": "Bulbasaur", "damage": 50, "type": "Grass/Poison"}
+{"name": "Pikachu", "damage": 55, "type": "Electric"}
+{"name": "Banette", "damage": 115, "type": "Ghost"}
