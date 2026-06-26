@@ -107,7 +107,8 @@ class HashMap:
         for idx, i in enumerate(self.hashmap[hashed]):
             if i[0] == key:
                 return i[1]
-    
+        return False
+
     def find_random(self):
         returned = None
         while not returned:
@@ -115,14 +116,21 @@ class HashMap:
         returned = returned[1]
         return returned
 
+    def display(self):
+        for i in self.hashmap:
+            for j in i:
+                if j:
+                    try:
+                        print(f"Name: {j[0]} | Attack: {j[1].attack} | Type: {j[1].type}")
+                    except:
+                        print(f"City: {j[0]} | Gym Leader: {j[1].gym_leader} | Specialty: {j[1].specialty}")
+
 
 class HashSet:
     def __init__(self, max_items, max_collisions):
         self.hashset = []
         for i in range(max_items):
             self.hashset.append([])
-            for _ in range(max_collisions):
-                self.hashset[i].append(None)
 
         self.hashset = tuple(self.hashset)
         self.max_items = max_items
@@ -137,6 +145,13 @@ class HashSet:
             if i == None:
                 self.hashset[hashed][idx] = data
                 return
+
+    def find(self, data):
+        hashed = self.hash(data)
+        for idx, i in enumerate(self.hashset[hashed]):
+            if i == data:
+                return True
+        return False
 
 class Queue:
     def __init__(self):
@@ -178,52 +193,80 @@ class Stack:
 #------------------------------------------------------------
 
 class Nomekop:
-    def __init__(self, name, damage, nomekop_id, nomekop_type):
+    def __init__(self, name, attack, nomekop_id, nomekop_type):
         self.name = name
-        self.damage = damage
+        self.attack = attack
         self.id = nomekop_id
-        self.type = nomekop_type
+        self.type = nomekop_type 
+
+class Gym:
+    def __init__(self, city, gym_leader, specialty, badge):
+        self.city = city
+        self.gym_leader = gym_leader
+        self.specialty = specialty
+        self.badge = badge
+
+    def fight(self):
+        return self.badge if randint(0, 1) == 1 else None
+
 
 def load_nomekops():
     nomekops = HashMap(15, 3)
     with open(Path('nomekops.jsonl').resolve(), 'r') as file:
         for i in file:
             obj = json.loads(i)
-            nomekops.append(obj["name"], Nomekop(obj["name"], obj["damage"], nomekops.hash(obj["name"]), obj["type"]))
+            nomekops.append(obj["name"], Nomekop(obj["name"], obj["attack"], nomekops.hash(obj["name"]), obj["type"]))
         return nomekops
 
-def load_badges():
-    badges = HashSet(8, 1)
-    if os.path.getsize(Path('badges.jsonl').resolve()) != 0:
-        with open(Path('badges.jsonl').resolve(), 'r') as file:
+def load_earned_badges():
+    badges = HashSet(8, 2)
+    if os.path.getsize(Path('earned_badges.jsonl').resolve()) != 0:
+        with open(Path('earned_badges.jsonl').resolve(), 'r') as file:
             for i in file:
                 obj = json.loads(i)
                 badges.append(obj["name"])
     return badges
 
+def add_to_badges(badge):
+    global badges
+    if badges.find(badge) != False:
+        return
+    with open(Path('earned_badges.jsonl').resolve(), 'a') as file:
+        x = {"name" : badge}
+        file.write(json.dumps(x) + '\n')
+    badges = load_earned_badges()  
+
 def load_captured():
-    global nomekops
     captured = LinkedList()
     if os.path.getsize(Path('captured.jsonl').resolve()) != 0:
         with open(Path('captured.jsonl').resolve(), 'r') as file:
             for idx, i in enumerate(file):
                 obj = json.loads(i)
-                captured.append(Nomekop(obj["name"], obj["damage"], nomekops.hash(obj["name"]), obj["type"]))
+                captured.append(Nomekop(obj["name"], obj["attack"], nomekops.hash(obj["name"]), obj["type"]))
     return captured
+
+def load_gyms():
+    gyms = HashMap(8, 2)
+    with open(Path('gyms.jsonl').resolve(), 'r') as file:
+        for idx, i in enumerate(file):
+            obj = json.loads(i)
+            gyms.append(obj["city"], Gym(obj["city"], obj["gym_leader"], obj["specialty"], obj["badge_name"]))
+    return gyms
+
 
 def add_to_captured_list(x):
     global captured
     open(Path('captured.jsonl').resolve(), 'w').close()
     with open(Path('captured.jsonl').resolve(), 'a') as file:
         for i in x:
-            nomekop = {"name" : i.name, "damage" : i.damage, "type" : i.type}
+            nomekop = {"name" : i.name, "attack" : i.attack, "type" : i.type}
             file.write(json.dumps(nomekop) + '\n')
     captured = load_captured()
 
-def add_to_captured(name, damage, ntype):
+def add_to_captured(name, attack, ntype):
     global captured
     with open(Path('captured.jsonl').resolve(), 'a') as file:
-        nomekop = {"name" : name, "damage": damage, "type" : ntype}
+        nomekop = {"name" : name, "attack": attack, "type" : ntype}
         file.write(json.dumps(nomekop) + '\n')
     captured = load_captured()
 
@@ -248,7 +291,20 @@ def remove_from_captured(name):
 
     os.replace(Path('out.jsonl').resolve(), Path('captured.jsonl').resolve())
     captured = load_captured()
-    return Nomekop(x['name'], x['damage'], nomekops.hash(x['name']), x["type"])
+    return Nomekop(x['name'], x['attack'], nomekops.hash(x['name']), x["type"])
+
+def sort_by_type():
+    global captured
+    x = [captured.remove_first() for _ in range(captured.size())] 
+    n = len(x)
+    for i in range(n):
+        min_idx = i
+        for j in range(i + 1, n):
+            if x[j].type.lower() < x[min_idx].type.lower():
+                min_idx = j
+        x[i], x[min_idx] = x[min_idx], x[i]
+    add_to_captured_list(x)
+
 
 def sort_by_name():
     global captured
@@ -257,14 +313,14 @@ def sort_by_name():
     for i in range(n):
         switched = False
         for j in range(0, n - i - 1):
-            if x[j].name.lower() > x[j + 1].name.lower():
+            if x[j].type.lower() < x[j + 1].type.lower():
                 x[j], x[j + 1] = x[j + 1], x[j]
                 switched = True
         if not switched:
             break
     add_to_captured_list(x)
 
-def sort_by_damage():
+def sort_by_attack():
     global captured
     x = [captured.remove_first() for _ in range(captured.size())]
     quicksort(x)
@@ -272,11 +328,11 @@ def sort_by_damage():
 
 
 def quicksort_part(arr, low, high):
-    pivot = arr[high].damage
+    pivot = arr[high].attack
     i = low - 1
 
     for j in range(low, high):
-        if arr[j].damage <= pivot:
+        if arr[j].attack <= pivot:
             i += 1
             arr[i], arr[j] = arr[j], arr[i]
 
@@ -303,7 +359,8 @@ def display_team():
         print("Main team empty!")
 
 nomekops = load_nomekops()
-badges = load_badges()
+badges = load_earned_badges()
+gyms = load_gyms()
 captured = load_captured()
 team = []
 koa = Stack()
@@ -316,7 +373,7 @@ while running:
 
     if healing.size() > 0 and time.time() - last_heal_epoch > 60:
         nomekop = healing.dequeue()
-        add_to_captured(nomekop.name, nomekop.damage, nomekop.type)
+        add_to_captured(nomekop.name, nomekop.attack, nomekop.type)
         last_heal_epoch = time.time()
         print()
         print("Nomekop returned fron Nomekop Center!")
@@ -331,35 +388,35 @@ while running:
         case '3':
             nomekop = nomekops.find_random()
             print(f"You captured {nomekop.name}!")
-            add_to_captured(nomekop.name, nomekop.damage, nomekop.type)
+            add_to_captured(nomekop.name, nomekop.attack, nomekop.type)
         case '4':
             display_team()
             captured.display()
             team_full = False if len(team) < 6 else True 
             in_captured = input("Who do you want to add? (answer with the Nomekop's name): ")
             if team_full:
-                in_team = input("Who do you want to remove? (answer with the Nomekop's position in the list): ")
+                in_team = input("Who do you want to remove? (answer with the Nomekop's position on the list): ")
             try:
                 in_captured = remove_from_captured(in_captured)
                 if in_captured == False:
                     raise Exception
                 if team_full:
                     in_team = team.pop(in_team)
-                    add_to_captured(in_team.name, in_team.damage, in_team.type)
+                    add_to_captured(in_team.name, in_team.attack, in_team.type)
                 team.append(in_captured)
             except:
                 print("Error. Try again.")
 
         case '5':
             captured.display()
-            sort = input("Do you want to sort by name (1), type (2) or damage (3)?")
+            sort = input("Do you want to sort by name (1), type (2) or attack (3)?: ")
             match sort:
                 case '1':
                     sort_by_name()
                 case '2':
-                    pass
+                    sort_by_type()
                 case '3':
-                    sort_by_damage()
+                    sort_by_attack()
                 case _:
                     print("Invalid input. Try again.")
             
@@ -377,7 +434,7 @@ while running:
         case '7':
             if koa.size() != 0:
                 x = koa.pop()
-                add_to_captured(x.name, x.damage, x.type)
+                add_to_captured(x.name, x.attack, x.type)
                 print("Returned nomekop!")
             else:
                 print("No nomekops to return.")
@@ -394,11 +451,22 @@ while running:
             except:
                 print("Error. Try again.")
         case '9':
-            pass
+            gyms.display()
+            fighter = input("Who do you want to fight with? (answer with the city's name): ")
+            fighter = gyms.find(fighter)
+            if fighter:
+                fighter = fighter.fight()
+                if fighter:
+                    add_to_badges(fighter)
+                    print("You won!")
+                else:
+                    print("You lost!")
+            else:
+                print("Invalid input. Try again.")
         case '10':
-            pass
+            nomekops.display()
         case '11':
-            pass
+           pass
         case '12':
             running = False
         case _:
