@@ -66,92 +66,69 @@ class LinkedList:
             current = current.next
         return count
 
-    def display(self):
-        print()
-        current = self.head
-        if not current:
-            print("No nomekops captured!")
-            return
-        print("You captured:")
-        while current:
-            print(current.data.name)
-            current = current.next
-        print()
-
-
+#tanto el hash set como el hash map no manejan colisiones porque no las tienen en ningún elemento del juego (todo lo que pueden llegar a tener no está en las manos
+#del usuario y es dependiente de unos .jsonl que en el runtime solo se leen).
 class HashMap:
-    def __init__(self, max_items, max_collisions):
+    def __init__(self, max_items):
         self.hashmap = []
         for i in range(max_items):
-            self.hashmap.append([])
-            for _ in range(max_collisions):
-                self.hashmap[i].append(None)
+            self.hashmap.append(None)
 
-        self.hashmap = tuple(self.hashmap)
         self.max_items = max_items
-        self.max_collisions = max_collisions
 
     def hash(self, key):
          return sum(bytearray(key, 'utf-8')) % self.max_items
 
     def append(self, key, value):
         hashed = self.hash(key)
-        for idx, i in enumerate(self.hashmap[hashed]):
-            if i == None:
-                self.hashmap[hashed][idx] = (key, value)
-                return
-
+        self.hashmap[hashed] = (key, value)
+        return
 
     def find(self, key):
         hashed = self.hash(key)
-        for idx, i in enumerate(self.hashmap[hashed]):
-            if i[0] == key:
-                return i[1]
+        if self.hashmap[hashed][0] == key:
+            return self.hashmap[hashed][1]
         return False
+
+    def find_with_hash(self, hashed):
+        if self.hashmap[hashed]:
+            return self.hashmap[hashed][1]
+        return False
+
 
     def find_random(self):
         returned = None
         while not returned:
-            returned = self.hashmap[randint(0, self.max_items - 1)][randint(0, self.max_collisions - 1)]
-        returned = returned[1]
-        return returned
-
-    def display(self):
-        for i in self.hashmap:
-            for j in i:
-                if j:
-                    try:
-                        print(f"Name: {j[0]} | Attack: {j[1].attack} | Type: {j[1].type}")
-                    except:
-                        print(f"City: {j[0]} | Gym Leader: {j[1].gym_leader} | Specialty: {j[1].specialty}")
-
+            returned = self.hashmap[randint(0, self.max_items - 1)]
+        return returned[1]
 
 class HashSet:
-    def __init__(self, max_items, max_collisions):
+    def __init__(self, max_items):
         self.hashset = []
         for i in range(max_items):
-            self.hashset.append([])
+            self.hashset.append(None)
 
-        self.hashset = tuple(self.hashset)
         self.max_items = max_items
-        self.max_collisions = max_collisions
 
     def hash(self, data):
          return sum(bytearray(data, 'utf-8')) % self.max_items
 
     def append(self, data):
         hashed = self.hash(data)
-        for idx, i in enumerate(self.hashset[hashed]):
-            if i == None:
-                self.hashset[hashed][idx] = data
-                return
+        self.hashset[hashed] = data
+        return
 
     def find(self, data):
         hashed = self.hash(data)
-        for idx, i in enumerate(self.hashset[hashed]):
-            if i == data:
-                return True
+        if self.hashset[hashed] == data:
+            return True
         return False
+
+    def display(self):
+        for i in self.hashset:
+            if i:
+                print(i)
+
 
 class Queue:
     def __init__(self):
@@ -211,15 +188,18 @@ class Gym:
 
 
 def load_nomekops():
-    nomekops = HashMap(15, 3)
+    nomekops = HashMap(15)
+    nomekop_ids = []
     with open(Path('nomekops.jsonl').resolve(), 'r') as file:
         for i in file:
             obj = json.loads(i)
-            nomekops.append(obj["name"], Nomekop(obj["name"], obj["attack"], nomekops.hash(obj["name"]), obj["type"]))
-        return nomekops
+            nomekop_id = nomekops.hash(obj["name"])
+            nomekops.append(obj["name"], Nomekop(obj["name"], obj["attack"], nomekop_id, obj["type"]))
+            nomekop_ids.append(nomekop_id)
+        return nomekops, nomekop_ids
 
 def load_earned_badges():
-    badges = HashSet(8, 2)
+    badges = HashSet(8)
     if os.path.getsize(Path('earned_badges.jsonl').resolve()) != 0:
         with open(Path('earned_badges.jsonl').resolve(), 'r') as file:
             for i in file:
@@ -246,7 +226,7 @@ def load_captured():
     return captured
 
 def load_gyms():
-    gyms = HashMap(8, 2)
+    gyms = HashMap(8)
     with open(Path('gyms.jsonl').resolve(), 'r') as file:
         for idx, i in enumerate(file):
             obj = json.loads(i)
@@ -349,6 +329,23 @@ def quicksort(arr, low=0, high=None):
         quicksort(arr, low, pivot_index - 1)
         quicksort(arr, pivot_index + 1, high)
 
+def binary_search(mylist, e, offset=0):
+    length = len(mylist)
+    if length == 0:
+        return False
+    if length == 1: 
+        return offset
+    else:
+        sec1list = mylist[0:round(length/2)]
+        sec2list = mylist[round(length/2):]
+        if sec1list[-1] > e:
+            binary_search(sec1list, e, offset) 
+        elif sec1list[-1] == e:
+            return offset + len(sec1list) - 1
+        else:
+            binary_search(sec2list, e, offset + len(sec1list))
+
+
 def display_team():
     global team
     if len(team) != 0:
@@ -358,7 +355,29 @@ def display_team():
     else:
         print("Main team empty!")
 
-nomekops = load_nomekops()
+def display_ekopdex():
+    global nomekops
+    for i in nomekops.hashmap:
+        print(f"Name: {i[0]} | Attack: {i[1].attack} | Type: {i[1].type} | ID: {i[1].id}")
+
+def display_gyms():
+    global gyms
+    for i in gyms.hashmap:
+        print(f"City: {i[0]} | Gym Leader: {i[1].gym_leader} | Specialty: {i[1].specialty}")
+
+def display_captured():
+    global captured
+    current = captured.head
+    if not current:
+        print("No nomekops captured!")
+        return
+    print("You captured:")
+    while current:
+        print(current.data.name)
+        current = current.next
+
+
+nomekops, nomekop_ids = load_nomekops()
 badges = load_earned_badges()
 gyms = load_gyms()
 captured = load_captured()
@@ -369,7 +388,7 @@ healing = Queue()
 last_heal_epoch = time.time()
 running = True
 while running:
-    print("---¡¡¡NOMEKOPS!!!---\n1. See Main Team\n2. See Storage\n3. Capture Nomekop\n4. Change Main Team\n5. Sort Storage\n6. Transfer to Professor Koa\n7. Undo Transfer to Koa\n8. Send Nomekop to Nomekop Center\n9. Fight Against a Gym Leader\n10. See Ekopdex\n11. See Earned Badges\n12. Exit")
+    print("---¡¡¡NOMEKOPS!!!---\n1. See Main Team\n2. See Storage\n3. Capture Nomekop\n4. Change Main Team\n5. Sort Storage\n6. Transfer to Professor Koa\n7. Undo Transfer to Koa\n8. Send Nomekop to Nomekop Center\n9. Fight Against a Gym Leader\n10. See Ekopdex\n11. See Earned Badges\n12. Find in Ekopdex\n13. Find in Main Team\n14. Exit")
 
     if healing.size() > 0 and time.time() - last_heal_epoch > 60:
         nomekop = healing.dequeue()
@@ -384,16 +403,16 @@ while running:
         case '1':
             display_team()
         case '2':
-            captured.display()
+            display_captured()
         case '3':
             nomekop = nomekops.find_random()
             print(f"You captured {nomekop.name}!")
             add_to_captured(nomekop.name, nomekop.attack, nomekop.type)
         case '4':
             display_team()
-            captured.display()
+            display_captured()
             team_full = False if len(team) < 6 else True 
-            in_captured = input("Who do you want to add? (answer with the Nomekop's name): ")
+            in_captured = input("Who do you want to add? (answer with the Nomekop's name [CASE SENSITIVE]): ")
             if team_full:
                 in_team = input("Who do you want to remove? (answer with the Nomekop's position on the list): ")
             try:
@@ -408,7 +427,7 @@ while running:
                 print("Error. Try again.")
 
         case '5':
-            captured.display()
+            display_captured()
             sort = input("Do you want to sort by name (1), type (2) or attack (3)?: ")
             match sort:
                 case '1':
@@ -421,8 +440,8 @@ while running:
                     print("Invalid input. Try again.")
             
         case '6':
-            captured.display()
-            nomekop = input("Who do you want to transfer to Professor Koa? (answer with the Nomekop's name): ")
+            display_captured()
+            nomekop = input("Who do you want to transfer to Professor Koa? (answer with the Nomekop's name [CASE SENSITIVE]): ")
             try:
                 nomekop = remove_from_captured(nomekop)
                 if nomekop == False or koa.size() > 5:
@@ -439,8 +458,8 @@ while running:
             else:
                 print("No nomekops to return.")
         case '8':
-            captured.display()
-            nomekop = input("Who do you want to transfer to the Nomekop Center? (answer with the Nomekop's name): ")
+            display_captured()
+            nomekop = input("Who do you want to transfer to the Nomekop Center? (answer with the Nomekop's name [CASE SENSITIVE]): ")
             try:
                 nomekop = remove_from_captured(nomekop)
                 print(nomekop)
@@ -451,8 +470,8 @@ while running:
             except:
                 print("Error. Try again.")
         case '9':
-            gyms.display()
-            fighter = input("Who do you want to fight with? (answer with the city's name): ")
+            display_gyms()
+            fighter = input("Who do you want to fight with? (answer with the city's name [CASE SENSITIVE]): ")
             fighter = gyms.find(fighter)
             if fighter:
                 fighter = fighter.fight()
@@ -464,18 +483,34 @@ while running:
             else:
                 print("Invalid input. Try again.")
         case '10':
-            nomekops.display()
+            display_ekopdex()
         case '11':
-           pass
+            badges.display()
         case '12':
+            nomekop = input("Who do you want to find in the Ekopdex? (answer with the Nomekop's id): ")
+            try:
+                nomekop = int(nomekop)
+            except:
+                print("Invalid input. Try again.")
+                continue
+            index = binary_search(nomekop_ids, nomekop)
+            if index:
+                nomekop = nomekops.find_with_hash(index)
+                print(f"Name: {nomekop.name} | Attack: {nomekop.attack} | Type: {nomekop.type} | ID: {nomekop.id}")
+            else:
+                print("Not found.")
+                
+        case '13':
+            nomekop = input("Who do you want to find in the Main Team? (answer with the Nomekop's name [CASE SENSITIVE]): ")
+            for i in team:
+                if nomekop == i.name:
+                    print("Nomekop in team!")
+                    break
+            print("Nomekop not in team.")
+        case '14':
             running = False
         case _:
             print("Invalid answer. Try again.")
-
-
-
-
-
 
 
 
