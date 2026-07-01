@@ -1,174 +1,7 @@
 from random import randint
 from pathlib import Path
 import json, os, time
-class LinkedList:
-    def __init__(self):
-        self.head = None
-        self.tail = None
-
-    class Node:
-        def __init__(self, data):
-            self.data = data
-            self.next = None
-
-    def append(self, data):
-        new_node = self.Node(data)
-
-        if not self.head:
-            self.head = new_node
-            self.tail = new_node
-            return
-
-        self.tail.next = new_node
-        self.tail = new_node
-        
-
-    def remove(self, target):
-        if not self.head:
-            return False
-        
-        if self.head.data.name == target:
-            x = self.head.data
-            if self.head == self.tail:
-                self.tail = None
-            self.head = self.head.next
-            return x
-            
-        current = self.head
-        while current.next:
-            if current.next.data.name == target:
-                x = self.head.data
-                if current.next == self.tail:
-                    self.tail = current  
-                current.next = current.next.next  
-                return x
-            current = current.next
-        return False
-
-    def remove_first(self):
-        if not self.head:
-            return False
-        
-        x = self.head.data
-
-        if self.tail == self.head:
-            self.head = None
-            self.tail = None
-            return x
-        self.head = self.head.next
-        return x
-
-    def size(self):
-        count = 0
-        current = self.head
-        while current:
-            count += 1
-            current = current.next
-        return count
-
-#tanto el hash set como el hash map no manejan colisiones porque no las tienen en ningún elemento del juego (todo lo que pueden llegar a tener no está en las manos
-#del usuario y es dependiente de unos .jsonl que en el runtime solo se leen).
-class HashMap:
-    def __init__(self, max_items):
-        self.hashmap = []
-        for i in range(max_items):
-            self.hashmap.append(None)
-
-        self.max_items = max_items
-
-    def hash(self, key):
-         return sum(bytearray(key, 'utf-8')) % self.max_items
-
-    def append(self, key, value):
-        hashed = self.hash(key)
-        self.hashmap[hashed] = (key, value)
-        return
-
-    def find(self, key):
-        hashed = self.hash(key)
-        if self.hashmap[hashed][0] == key:
-            return self.hashmap[hashed][1]
-        return False
-
-    def find_with_hash(self, hashed):
-        if self.hashmap[hashed]:
-            return self.hashmap[hashed][1]
-        return False
-
-
-    def find_random(self):
-        returned = None
-        while not returned:
-            returned = self.hashmap[randint(0, self.max_items - 1)]
-        return returned[1]
-
-class HashSet:
-    def __init__(self, max_items):
-        self.hashset = []
-        for i in range(max_items):
-            self.hashset.append(None)
-
-        self.max_items = max_items
-
-    def hash(self, data):
-         return sum(bytearray(data, 'utf-8')) % self.max_items
-
-    def append(self, data):
-        hashed = self.hash(data)
-        self.hashset[hashed] = data
-        return
-
-    def find(self, data):
-        hashed = self.hash(data)
-        if self.hashset[hashed] == data:
-            return True
-        return False
-
-    def display(self):
-        for i in self.hashset:
-            if i:
-                print(i)
-
-
-class Queue:
-    def __init__(self):
-        self.queue = []
-    def enqueue(self, item):
-        self.queue.append(item)
-    def dequeue(self):
-        try:
-            return self.queue.pop(0)
-        except:
-            pass
-    def peek(self):
-        try:
-            print(self.queue[1])
-        except:
-            pass
-    def size(self):
-        return len(self.queue)
-
-
-class Stack:
-    def __init__(self):
-        self.stack = []
-    def push(self, item):
-        self.stack.append(item)
-    def pop(self):
-        try:
-            return self.stack.pop()
-        except:
-            pass
-    def peek(self):
-        try:
-            print(self.stack[-1])
-        except:
-            pass
-    def size(self):
-        return len(self.stack)
-
-#------------------------------------------------------------
-
+from structures import *
 class Nomekop:
     def __init__(self, name, attack, nomekop_id, nomekop_type):
         self.name = name
@@ -186,7 +19,6 @@ class Gym:
     def fight(self):
         return self.badge if randint(0, 1) == 1 else None
 
-
 def load_nomekops():
     nomekops = HashMap(15)
     nomekop_ids = []
@@ -194,9 +26,10 @@ def load_nomekops():
         for i in file:
             obj = json.loads(i)
             nomekop_id = nomekops.hash(obj["name"])
-            nomekops.append(obj["name"], Nomekop(obj["name"], obj["attack"], nomekop_id, obj["type"]))
+            nomekops.append_hash(obj["name"], Nomekop(obj["name"], obj["attack"], nomekop_id, obj["type"]))
             nomekop_ids.append(nomekop_id)
-        return nomekops, nomekop_ids
+        nomekop_ids = sorted(nomekop_ids) #no uso los sorts que hice porque los adapté para que ordenen por nombre o tipo o ataque
+        return nomekops, nomekop_ids 
 
 def load_earned_badges():
     badges = HashSet(8)
@@ -293,7 +126,7 @@ def sort_by_name():
     for i in range(n):
         switched = False
         for j in range(0, n - i - 1):
-            if x[j].type.lower() < x[j + 1].type.lower():
+            if x[j].name.lower() > x[j + 1].name.lower():
                 x[j], x[j + 1] = x[j + 1], x[j]
                 switched = True
         if not switched:
@@ -331,19 +164,23 @@ def quicksort(arr, low=0, high=None):
 
 def binary_search(mylist, e, offset=0):
     length = len(mylist)
-    if length == 0:
+    if length == 0: 
         return False
-    if length == 1: 
-        return offset
+    
+    if length == 1:
+        if mylist[0] == e:
+            return offset
+        return False
+
     else:
         sec1list = mylist[0:round(length/2)]
         sec2list = mylist[round(length/2):]
         if sec1list[-1] > e:
-            binary_search(sec1list, e, offset) 
+            return binary_search(sec1list, e, offset) 
         elif sec1list[-1] == e:
             return offset + len(sec1list) - 1
         else:
-            binary_search(sec2list, e, offset + len(sec1list))
+            return binary_search(sec2list, e, offset + len(sec1list))
 
 
 def display_team():
@@ -358,7 +195,7 @@ def display_team():
 def display_ekopdex():
     global nomekops
     for i in nomekops.hashmap:
-        print(f"Name: {i[0]} | Attack: {i[1].attack} | Type: {i[1].type} | ID: {i[1].id}")
+        print(f"Name: {i[1].name} | Attack: {i[1].attack} | Type: {i[1].type} | ID: {i[1].id}")
 
 def display_gyms():
     global gyms
@@ -375,7 +212,6 @@ def display_captured():
     while current:
         print(current.data.name)
         current = current.next
-
 
 nomekops, nomekop_ids = load_nomekops()
 badges = load_earned_badges()
@@ -407,20 +243,27 @@ while running:
         case '3':
             nomekop = nomekops.find_random()
             print(f"You captured {nomekop.name}!")
-            add_to_captured(nomekop.name, nomekop.attack, nomekop.type)
+            if len(team) < 6:
+                team.append(nomekop)
+            else:
+                print("Main team full! Adding to storage!")
+                add_to_captured(nomekop.name, nomekop.attack, nomekop.type)
         case '4':
+            print()
             display_team()
+            print()
             display_captured()
             team_full = False if len(team) < 6 else True 
             in_captured = input("Who do you want to add? (answer with the Nomekop's name [CASE SENSITIVE]): ")
+            #tenés que llenar el equipo para poder cambiarlo
             if team_full:
                 in_team = input("Who do you want to remove? (answer with the Nomekop's position on the list): ")
             try:
                 in_captured = remove_from_captured(in_captured)
-                if in_captured == False:
+                if not in_captured:
                     raise Exception
                 if team_full:
-                    in_team = team.pop(in_team)
+                    in_team = team.pop(int(in_team) - 1)
                     add_to_captured(in_team.name, in_team.attack, in_team.type)
                 team.append(in_captured)
             except:
@@ -462,14 +305,17 @@ while running:
             nomekop = input("Who do you want to transfer to the Nomekop Center? (answer with the Nomekop's name [CASE SENSITIVE]): ")
             try:
                 nomekop = remove_from_captured(nomekop)
-                print(nomekop)
                 if nomekop == False:
                     raise Exception
                 healing.enqueue(nomekop)
+                #mandar un pokemon/nomekop al center reinicia la cuenta de todos los demás
                 last_heal_epoch = time.time()
             except:
                 print("Error. Try again.")
         case '9':
+            if len(team) == 0:
+                print("Your team is empty!")
+                continue
             display_gyms()
             fighter = input("Who do you want to fight with? (answer with the city's name [CASE SENSITIVE]): ")
             fighter = gyms.find(fighter)
@@ -502,15 +348,16 @@ while running:
                 
         case '13':
             nomekop = input("Who do you want to find in the Main Team? (answer with the Nomekop's name [CASE SENSITIVE]): ")
+            in_team = False
             for i in team:
                 if nomekop == i.name:
-                    print("Nomekop in team!")
-                    break
-            print("Nomekop not in team.")
+                    print("The Nomekop is in the Main Team!")
+                    in_team = True
+            if not in_team:
+                print("The Nomekop is not in the Main Team.")
+
         case '14':
             running = False
         case _:
             print("Invalid answer. Try again.")
-
-
 

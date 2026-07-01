@@ -1,8 +1,8 @@
-{"order": 1, "city": "Pewter City", "gym_leader": "Brock", "badge_name": "Boulder Badge", "specialty": "Rock"}
-{"order": 2, "city": "Cerulean City", "gym_leader": "Misty", "badge_name": "Cascade Badge", "specialty": "Water"}
-{"order": 3, "city": "Vermilion City", "gym_leader": "Lt. Surge", "badge_name": "Thunder Badge", "specialty": "Electric"}
-{"order": 4, "city": "Celadon City", "gym_leader": "Erika", "badge_name": "Rainbow Badge", "specialty": "Grass"}
-{"order": 5, "city": "Fuchsia City", "gym_leader": "Koga / Janine", "badge_name": "Soul Badge", "specialty": "Poison"}
-{"order": 6, "city": "Saffron City", "gym_leader": "Sabrina", "badge_name": "Marsh Badge", "specialty": "Psychic"}
-{"order": 7, "city": "Cinnabar Island", "gym_leader": "Blaine", "badge_name": "Volcano Badge", "specialty": "Fire"}
-{"order": 8, "city": "Viridian City", "gym_leader": "Giovanni", "badge_name": "Earth Badge", "specialty": "Ground"}
+{"order": 1, "city": "Rock", "gym_leader": "Brock", "badge_name": "Geode Crest", "specialty": "Rock"}
+{"order": 2, "city": "Azul Cerulean", "gym_leader": "Misty", "badge_name": "Tide Token", "specialty": "Water"}
+{"order": 3, "city": "Vermilion City", "gym_leader": "Lt. Surge", "badge_name": "Current Fuse", "specialty": "Electric"}
+{"order": 4, "city": "Jade Celadon", "gym_leader": "Erika", "badge_name": "Verdant Petal", "specialty": "Grass"}
+{"order": 5, "city": "Fuchsia City", "gym_leader": "Koga / Janine", "badge_name": "Hazard Symbol", "specialty": "Poison"}
+{"order": 6, "city": "Gold Saffron", "gym_leader": "Sabrina", "badge_name": "Aura Pendant", "specialty": "Psychic"}
+{"order": 7, "city": "Cinnabar Island", "gym_leader": "Blaine", "badge_name": "Magma Core", "specialty": "Fire"}
+{"order": 8, "city": "Emerald Viridian", "gym_leader": "Giovanni", "badge_name": "Seismic Fault", "specialty": "Ground"}
