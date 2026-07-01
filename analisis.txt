@@ -1,0 +1,17 @@
+a) El array tardaría O(1) porque se agregaría al espacio siguiente al último en memoria
+y la linked list también porque se pondría como siguiente del nuevo nodo el primero de la lista enlazada original.
+
+b) La Pókedex se implementa usando un hash map porque la búsqueda en estas estructuras tiene una big O de O(1) (o sea, 
+es extremadamente rápida: es la mejor que puede tener un algoritmo). Esto es porque el índice de cualquier dato x
+es la llave del dato pasada por una función hash (que devuelve un número obtenido desde lo que se haya hasheado: por 
+ejemplo, suma los códigos ASCII de sus letras) por lo que el acceso al mismo consiste simplemente en hashear la llave dada
+e ir al índice que haya devuelto. Obviamente se pueden crear colisiones dependiendo de la cantidad de buckets (espacios que 
+pueden ocupar los datos) y la calidad de la hash function: esto se puede manejar a través de separate chaining (que cada bucket
+tenga una estructura dentro del mismo que guarde varios elementos, como un array) o linear probing (que se guarde en el siguiente
+bucket disponible). Esto en la práctica puede cambiar cuán rápido se puede acceder al dato pero en la teoría se ignora
+y se sigue contando como O(1).
+
+c) El peor caso del bubble sort hace 36000000 veces la cantidad de operaciones de cada iteración del mismo (O(n^2)), en el mejor caso recorre toda la lista y o
+cambia una o no cambia nada haciendo 6000 veces la cant. de operaciones (O(n)).
+Por otro lado el peor caso del quicksort es igual que del bubble: la diferencia es que el promedio (que también es el mejor) es de O(n*log(n)), que haría 22669
+operaciones.
